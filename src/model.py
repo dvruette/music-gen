@@ -155,11 +155,11 @@ class DiffusionModule(pl.LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.lr)
 
-    def training_step(self, batch):
+    def training_step(self, batch, batch_idx):
         return self.get_loss(batch)
 
-    def validation_step(self, batch):
+    def validation_step(self, batch, batch_idx):
         return self.get_loss(batch)
 
-    def test_step(self, batch):
+    def test_step(self, batch, batch_idx):
         return self.get_loss(batch)

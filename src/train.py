@@ -15,35 +15,35 @@ class DiffusionCollator:
 
 @hydra.main(config_path="../config", config_name="default")
 def main(config):
-    ds = torchvision.datasets.CIFAR100("../data/cifar", download=True, transform=transforms.Compose([
+    train_ds = torchvision.datasets.CIFAR100("../data/cifar", download=True, train=True, transform=transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    ]))
+
+    val_ds = torchvision.datasets.CIFAR100("../data/cifar", download=True, train=False, transform=transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ]))
 
     data_collator = DiffusionCollator()
-    dl = DataLoader(ds, batch_size=config.training.batch_size, collate_fn=data_collator)
+    train_dl = DataLoader(train_ds, pin_memory=True, num_workers=config.training.num_workers, batch_size=config.training.batch_size, collate_fn=data_collator, shuffle=True)
+    val_dl = DataLoader(val_ds, pin_memory=True, num_workers=config.training.num_workers, batch_size=config.training.batch_size, collate_fn=data_collator)
 
     model = DiffusionModule(
         lr=config.training.lr,
     )
 
+    logger = pl.loggers.WandbLogger(project="music-gen", config=config)
+
     trainer = pl.Trainer(
-        max_steps=config.training.steps
+        max_steps=config.training.steps,
+        logger=logger,
+        log_every_n_steps=100,
+        val_check_interval=500,
+        dirpath="./checkpoints",
     )
-    trainer.fit(model, dl)
+    trainer.fit(model, train_dataloaders=train_dl, val_dataloaders=val_dl)
 
-    print("done")
-
-    # epoch = 0
-    # with tqdm(total=config.training.steps) as pbar:
-    #     epoch += 1
-    #     for batch in dl:
-    #         loss = model.get_loss(batch)
-    #         optimizer.zero_grad()
-    #         loss.backward()
-    #         optimizer.step()
-
-    #         pbar.set_postfix(epoch=epoch, loss=loss.item())
 
 if __name__ == '__main__':
     main()
