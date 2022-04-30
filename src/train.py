@@ -36,11 +36,11 @@ def main(config):
     logger = pl.loggers.WandbLogger(project="music-gen", config=config)
 
     trainer = pl.Trainer(
-        max_steps=config.training.steps,
+        accelerator='gpu' if torch.cuda.is_available() else 'cpu',
+        max_epochs=config.training.epochs,
         logger=logger,
         log_every_n_steps=100,
-        val_check_interval=500,
-        dirpath="./checkpoints",
+        val_check_interval=1000,
     )
     trainer.fit(model, train_dataloaders=train_dl, val_dataloaders=val_dl)
 

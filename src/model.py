@@ -122,10 +122,13 @@ class DiffusionModule(pl.LightningModule):
         self.lr = lr
 
         betas = np.linspace(beta_1, beta_t, self.max_t)
-        self.alphas = torch.tensor(np.cumprod(1 - betas), dtype=torch.float, device=self.device)
+        alphas = torch.tensor(np.cumprod(1 - betas), dtype=torch.float)
+        self.register_buffer('alphas', alphas)
         
         self.t_embed = nn.Embedding(max_t, t_dim)
         self.unet = UNet(t_dim=t_dim)
+
+        self.save_hyperparameters()
         
     def add_noise(self, x, t):
         batch_size = x.size(0)
@@ -156,10 +159,14 @@ class DiffusionModule(pl.LightningModule):
         return torch.optim.Adam(self.parameters(), lr=self.lr)
 
     def training_step(self, batch, batch_idx):
-        return self.get_loss(batch)
+        loss = self.get_loss(batch)
+        self.log("train/loss", loss)
+        return loss
 
     def validation_step(self, batch, batch_idx):
-        return self.get_loss(batch)
+        loss = self.get_loss(batch)
+        self.log("val/loss", loss)
+        return loss
 
     def test_step(self, batch, batch_idx):
         return self.get_loss(batch)
