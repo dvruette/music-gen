@@ -122,7 +122,7 @@ class DiffusionModule(pl.LightningModule):
         self.lr = lr
 
         betas = np.linspace(beta_1, beta_t, self.max_t)
-        self.alphas = torch.tensor(np.cumprod(1 - betas), dtype=torch.float)
+        self.alphas = torch.tensor(np.cumprod(1 - betas), dtype=torch.float, device=self.device)
         
         self.t_embed = nn.Embedding(max_t, t_dim)
         self.unet = UNet(t_dim=t_dim)
@@ -143,7 +143,7 @@ class DiffusionModule(pl.LightningModule):
 
     def get_loss(self, x):
         batch_size = x.size(0)
-        t = torch.randint(self.max_t, size=(batch_size,))
+        t = torch.randint(self.max_t, size=(batch_size,), device=self.device)
         x_hat, eps = self.add_noise(x, t)
         
         eps_hat = self.forward(x_hat, t)
