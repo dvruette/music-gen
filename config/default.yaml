@@ -1,0 +1,4 @@
+training:
+  lr: 0.0001
+  batch_size: 8
+  steps: 1000
