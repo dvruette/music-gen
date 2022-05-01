@@ -121,12 +121,14 @@ class DiffusionModule(pl.LightningModule):
         self.max_t = max_t
         self.lr = lr
 
-        betas = np.linspace(beta_1, beta_t, self.max_t)
-        alphas = torch.tensor(np.cumprod(1 - betas), dtype=torch.float)
-        self.register_buffer('alphas', alphas)
+        betas = torch.linspace(beta_1, beta_t, self.max_t)
+        alphas = torch.cumprod(1 - betas)
         
         self.t_embed = nn.Embedding(max_t, t_dim)
         self.unet = UNet(t_dim=t_dim)
+
+        self.register_buffer('alphas', alphas)
+        self.register_buffer('betas', betas)
 
         self.save_hyperparameters()
         
