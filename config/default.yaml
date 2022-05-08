@@ -1,5 +1,0 @@
-training:
-  lr: 0.0001
-  batch_size: 8
-  epochs: 1
-  num_workers: 8
